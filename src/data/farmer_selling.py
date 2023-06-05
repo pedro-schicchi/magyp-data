@@ -12,8 +12,14 @@ def numeric_converter(string):
     numeric = pd.to_numeric(cleaned_string, errors='coerce')
     return numeric
 
-def fix_column_names(col_names):
-    return 
+def fix_column_names(columns):
+    # removes numbers and dates at the end of columns
+    new_columns = columns.str.split(' y| \(', n=1, expand=True).get_level_values(0)
+    # makes everything lower case and removes whitespaces
+    new_columns = new_columns.str.lower()
+    new_columns = new_columns.str.replace(r'\s+', ' ', regex=True)
+    new_columns = new_columns.str.replace(' ','_')
+    return new_columns
 
 class ArgentinaFarmerSelling:
     def __init__(self, date):
@@ -56,12 +62,21 @@ class ArgentinaFarmerSelling:
             converters={c:numeric_converter for c in range(2,num_cols)}
         )
 
-        # fix columns
-        
+        # merge in single df
+        df = pd.concat({comm:df for comm,df in zip(commodities, dfs)})
+        df = df.reset_index(level=0,names='commodities').reset_index(drop=True)
 
-        return dfs
+        # fix columns
+        df.columns = fix_column_names(df.columns)
+
+        # makes df an attribute of the query instance
+        self.data = df
+
+        return df
 
 
 if __name__ == '__main__':
     query = ArgentinaFarmerSelling('2018-01-03')
-    print(query.data_single_week())
+    df = query.data_single_week()
+    # test = fix_column_names(df.columns)
+    print(query.data.head())
