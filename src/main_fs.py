@@ -1,7 +1,7 @@
 import os
 import pandas as pd
-from data.farmer_selling_collect import RawFarmerSellingData
-from data.farmer_selling_process import ProcessedFarmerSellingData
+from data.farmerselling_collect import RawFarmerSellingData
+from data.farmerselling_cleaning import ProcessedFarmerSellingData
 
 # fix folders
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
