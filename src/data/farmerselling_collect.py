@@ -1,3 +1,4 @@
+# %%
 # built-in libraries
 import os
 # third-party libraries
@@ -6,6 +7,8 @@ from bs4 import BeautifulSoup
 import pandas as pd
 # custom libraries
 from .utils import std_str_series, numeric_converter
+
+VERIFY = False
 
 
 def get_report_dates_in_year(year):        
@@ -27,7 +30,7 @@ def get_report_dates_in_year(year):
 def format_colnames(columns):
     # removes numbers and dates at the end of columns
     new_columns = columns.str.split(' y| \(', n=1, expand=True).get_level_values(0)
-    new_columns = new_columns.str.replace('*','', regex=True)
+    new_columns = new_columns.str.replace('\*','', regex=True)
     # makes everything lower case and removes whitespaces
     new_columns = std_str_series(new_columns)
     return new_columns
@@ -74,7 +77,7 @@ class RawFarmerSellingData:
         # get html file
         url = ('https://www.magyp.gob.ar/sitio/areas/ss_mercados_agropecuarios/areas/granos/_archivos/'
                f'000058_Estad%C3%ADsticas/_compras_historicos/{date_str[:4]}/01_embarque_{date_str}.php')
-        response = requests.get(url)
+        response = requests.get(url, verify=VERIFY)
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -100,7 +103,8 @@ class RawFarmerSellingData:
             
             # merge in single df
             df = pd.concat({comm:df for comm,df in zip(commodities, dfs)})
-            df = df.reset_index(level=0,names='producto').reset_index(drop=True)
+            df = df.reset_index(level=0).rename({'level_0':'producto'}, axis=1)
+            df = df.reset_index(drop=True)
             
             df['date'] = date
 
@@ -125,6 +129,10 @@ class RawFarmerSellingData:
 
             # saves into parquet files
             df.to_parquet(os.path.join(out_dir,f'fs_{date_str}.parquet'))
+            
+            return df
+
+# %%
 
 if __name__ == '__main__':
     # fix folders
@@ -132,21 +140,8 @@ if __name__ == '__main__':
     DATA_DIR = os.path.join(BASE_DIR,'..','..','data','raw','farmer_selling')
     
     # gets the data
-    for y in range(2018,2024):
-        print('getting data')
-        query = RawFarmerSellingData(year=y)
-        results = query.get_data()
-        results = query.save_data(DATA_DIR)
-        
-        # print('\nsaving files')
-        # for date, df in results.items():
-        #     # feedback to user
-        #     date_str = date.strftime('%Y-%m-%d')
-
-        #     # saves into parquet files
-        #     df.to_parquet(os.path.join(OUTPUT_DIR,f'fs_{date_str}.parquet'))
-        
-        # print('\n')
-        # # to test
-        # print(df.head())
+    print('getting data')
+    query = RawFarmerSellingData(dates='2024-01-10')
+    results = query.get_data()
+    results = query.save_data(DATA_DIR)
     

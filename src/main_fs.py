@@ -3,6 +3,7 @@ import pandas as pd
 from data.farmerselling_collect import RawFarmerSellingData
 from data.farmerselling_cleaning import ProcessedFarmerSellingData
 
+
 # fix folders
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR,'..','data','raw','farmer_selling')
@@ -39,4 +40,3 @@ if __name__ == '__main__':
     data.load_data()
     data.process_data()
     data.save_data(OUTPUT_DIR)
-    

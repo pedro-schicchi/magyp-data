@@ -17,8 +17,8 @@ class ProcessedFarmerSellingData:
         'trigo':'wheat',
         'maíz':'corn',
         'sorgo':'sorghum',
-        'cebada cervecera':'barley',
-        'cebada forrajera':'barley_feed',
+        'cebada_cervecera':'barley',
+        'cebada_forrajera':'barley_feed',
         'soja':'soybean',
         'girasol':'sunflower'
     }
@@ -61,13 +61,14 @@ class ProcessedFarmerSellingData:
         df['ref_period'] = pd.Series(np.where(mask, 'y-1', 'y'))
         
         # define idx and columns values for later reshaping 
-        idx_cols = list(idx_cols.values()) + ['ref_period']
+        idx_cols = list(idx_cols.values()) + ['crop_year', 'ref_period']
         # value_cols = [col for col in df.columns if col not in idx_cols]
         
         # standardize string columns
         df[['commodity', 'buyer']] = df[['commodity', 'buyer']].apply(std_str_series)
         df['buyer'] = self.fix_buyers_names(df['buyer'])
         df['commodity'] = self.fix_commodities_names(df['commodity'])
+        df['crop_year'] = df['crop'].str[:2].astype(int) + 2000
         
         # fillnas based on the following equations
         # # total_comprado = total_acumulado
@@ -105,4 +106,4 @@ if __name__ == '__main__':
     data.process_data()
     
     # save into csv for easy consumption
-    data.save_data()
+    data.save_data(OUTPUT_DIR)
